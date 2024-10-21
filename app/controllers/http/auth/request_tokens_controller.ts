@@ -5,14 +5,9 @@ import { requestTokenValidator } from '#validators/request_token_validator'
 
 @inject()
 export default class RequestTokenController {
+
   /**
-   * The `handleRequestToken` method is used to issue a signed JWT token
-   * for a user. The method verifies the user credentials using the
-   * `User.verifyCredentials` method and then creates a new token using
-   * `User.accessTokens.create` method.
-   *
-   * The response is a JSON response with the signed token and a success
-   * status code.
+   * Issues a signed JWT token for a user given their email and password.
    *
    * @remarks
    * The route is protected by the `auth_middleware` middleware, which
@@ -21,6 +16,8 @@ export default class RequestTokenController {
    *
    * @param request - The HTTP request
    * @param response - The HTTP response
+   *
+   * @returns {Promise<void>} - A promise that resolves with no value
    */
   async handleRequestToken({ request, response }: HttpContext): Promise<void> {
     const { email, password } = await request.validateUsing(requestTokenValidator)
