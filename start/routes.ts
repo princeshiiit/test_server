@@ -27,7 +27,12 @@ router.get('/', async () => {
  *
  * @returns {object} - The signed JWT token
  */
-router.post('/login', '#controllers/http/auth/request_tokens_controller.handleRequestToken')
+router.post('/request-token', async (ctx) => {
+  const { default: RequestTokenController } = await import(
+    '#controllers/http/auth/request_tokens_controller'
+  )
+  return new RequestTokenController().handleRequestToken(ctx)
+})
 
 /**
  * Register route
@@ -41,14 +46,44 @@ router.post('/login', '#controllers/http/auth/request_tokens_controller.handleRe
  *
  * @returns {object} - The newly created user
  */
-router.post('/register', '#controllers/http/auth/registers_controller.handleRegister')
+router.post('/register', async (ctx) => {
+  const { default: RegisterController } = await import(
+    '#controllers/http/auth/registers_controller'
+  )
+  return new RegisterController().handleRegister(ctx)
+})
 
 router.group(() => {
-  router.post('/create-todo', '#controllers/http/crud/todos_controller.create')
-  router.get('/read-todo/:id', '#controllers/http/crud/todos_controller.readById')
-  router.get('/browse-todo', '#controllers/http/crud/todos_controller.readAll')
-  router.put('/update-todo/:id', '#controllers/http/crud/todos_controller.update')
-  router.delete('/delete-todo/:id', '#controllers/http/crud/todos_controller.delete')
+  router.post('/create-todo', async (ctx) => {
+    const { default: TodosController } = await import(
+      '#controllers/http/crud/todos_controller'
+    )
+    return new TodosController().create(ctx)
+  })
+  router.get('/read-todo/:id', async (ctx) => {
+    const { default: TodosController } = await import(
+      '#controllers/http/crud/todos_controller'
+    )
+    return new TodosController().readById(ctx)
+  })
+  router.get('/browse-todo', async (ctx) => {
+    const { default: TodosController } = await import(
+      '#controllers/http/crud/todos_controller'
+    )
+    return new TodosController().readAll(ctx)
+  })
+  router.put('/update-todo/:id', async (ctx) => {
+    const { default: TodosController } = await import(
+      '#controllers/http/crud/todos_controller'
+    )
+    return new TodosController().update(ctx)
+  })
+  router.delete('/delete-todo/:id', async (ctx) => {
+    const { default: TodosController } = await import(
+      '#controllers/http/crud/todos_controller'
+    )
+    return new TodosController().delete(ctx)
+  })
 }).prefix('/todos').use(
   middleware.auth({
     guards: ['api'],
