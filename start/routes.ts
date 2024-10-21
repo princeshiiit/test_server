@@ -53,6 +53,16 @@ router.post('/register', async (ctx) => {
   return new RegisterController().handleRegister(ctx)
 })
 
+/**
+ * Authenticated routes
+ *
+ * @remarks
+ * These routes require a user to be authenticated by providing a valid
+ * JWT token in the "Authorization" header.
+ *
+ * @example
+ * Authorization: Bearer <your-jwt-token>
+ */
 router.group(() => {
   router.post('/create-todo', async (ctx) => {
     const { default: TodosController } = await import(
