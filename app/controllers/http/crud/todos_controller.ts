@@ -1,22 +1,27 @@
 import type { HttpContext } from '@adonisjs/core/http';
 import Todo from '#models/todo';
 import RedisService from '#services/redis_service';
+import { createTodoValidator, updateTodoValidator } from '#validators/todo_validator';
 
 const redisService = new RedisService();
 
+/**
+ * Controller for managing Todo items.
+ */
 export default class TodosController {
-
   /**
-   * Creates a new todo item in the database and in the Redis cache.
-   * Returns the newly created todo item in JSON format with a 201 status.
+   * Creates a new Todo item in the database and in the Redis cache.
+   * Returns the newly created Todo item in JSON format with a 201 status.
    *
-   * @param request - The HTTP request
-   * @param response - The HTTP response
-   *
-   * @returns {Promise<void>} - A promise that resolves with no value
+   * @param {HttpContext} context - The HTTP context containing request and response objects.
+   * @returns {Promise<void>} - A promise that resolves with no value.
    */
-  public async create({ request, response }: HttpContext) {
+  public async create({ request, response }: HttpContext): Promise<void> {
     const { title, description } = request.body();
+
+    // Validate input
+    await createTodoValidator.validate({ title, description });
+
     const todo = new Todo();
     todo.title = title;
     todo.description = description;
@@ -26,17 +31,13 @@ export default class TodosController {
   }
 
   /**
-   * Retrieves a single todo item by its ID from the Redis cache or from
-   * the database if it doesn't exist in the cache. If the todo item doesn't
-   * exist, returns a 404 status with a message. Otherwise, returns the
-   * todo item in JSON format.
+   * Retrieves a single Todo item by its ID from the Redis cache or from
+   * the database if it doesn't exist in the cache.
    *
-   * @param params - The parameters containing the todo ID
-   * @param response - The HTTP response
-   *
-   * @returns {Promise<void>} - A promise that resolves with no value
+   * @param {HttpContext} context - The HTTP context containing params and response objects.
+   * @returns {Promise<void>} - A promise that resolves with no value.
    */
-  public async readById({ params, response }: HttpContext) {
+  public async readById({ params, response }: HttpContext): Promise<void> {
     const cacheKey = `todo:${params.id}`;
     
     let todo = await redisService.get(cacheKey);
@@ -54,15 +55,14 @@ export default class TodosController {
   }
 
   /**
-   * Retrieves all todo items from the database. If they exist in the
-   * Redis cache, return them from the cache. Otherwise, retrieve them
-   * from the database and cache them.
+   * Retrieves all Todo items from the database.
+   * If they exist in the Redis cache, return them from the cache.
+   * Otherwise, retrieve them from the database and cache them.
    *
-   * @param response - The HTTP response
-   *
-   * @returns {Promise<void>} - A promise that resolves with no value
+   * @param {HttpContext} context - The HTTP context containing response object.
+   * @returns {Promise<void>} - A promise that resolves with no value.
    */
-  public async readAll({ response }: HttpContext) {
+  public async readAll({ response }: HttpContext): Promise<void> {
     const cacheKey = 'todos';
 
     let todos = await redisService.get(cacheKey);
@@ -76,35 +76,37 @@ export default class TodosController {
   }
 
   /**
-   * Updates a todo item with the provided title and description.
-   * If the todo item is not found, returns a 404 status with a message.
-   * 
-   * @param params - The parameters containing the todo ID
-   * @param request - The HTTP request containing the new title and description
-   * @param response - The HTTP response
+   * Updates a Todo item with the provided title and description.
+   * If the Todo item is not found, returns a 404 status with a message.
+   *
+   * @param {HttpContext} context - The HTTP context containing params, request, and response objects.
+   * @returns {Promise<void>} - A promise that resolves with no value.
    */
-  public async update({ params, request, response }: HttpContext) {
+  public async update({ params, request, response }: HttpContext): Promise<void> {
     const todo = await Todo.find(params.id);
     if (!todo) {
       return response.status(404).json({ message: 'Todo not found' });
     }
+
+    // Validate input
     const { title, description } = request.body();
-    todo.title = title;
-    todo.description = description;
+    await updateTodoValidator.validate({ title, description });
+
+    if (title) todo.title = title;
+    if (description) todo.description = description;
     await todo.save();
     await redisService.set(`todo:${todo.id}`, JSON.stringify(todo));
     return response.status(200).json(todo);
   }
 
   /**
-   * Delete a todo item with the given id.
+   * Deletes a Todo item with the given ID.
+   * If the Todo item does not exist, the response will be a 404 status code.
    *
-   * @remarks
-   * If the todo item does not exist, the response will be a 404 status code.
-   * Otherwise, the response will be a 200 status code with a JSON message
-   * indicating that the todo item was deleted successfully.
+   * @param {HttpContext} context - The HTTP context containing params and response objects.
+   * @returns {Promise<void>} - A promise that resolves with no value.
    */
-  public async delete({ params, response }: HttpContext) {
+  public async delete({ params, response }: HttpContext): Promise<void> {
     const todo = await Todo.find(params.id);
     if (!todo) {
       return response.status(404).json({ message: 'Todo not found' });
