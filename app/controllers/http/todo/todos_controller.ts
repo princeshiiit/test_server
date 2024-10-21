@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http';
 import Todo from '#models/todo';
 import RedisService from '#services/redis_service';
-import { createTodoValidator, updateTodoValidator } from '#validators/todo_validator';
+import { createTodoValidator, updateTodoValidator } from '#validators/todo/todo_validator';
 
 const redisService = new RedisService();
 

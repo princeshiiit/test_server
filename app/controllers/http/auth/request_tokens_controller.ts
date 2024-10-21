@@ -1,7 +1,7 @@
 import { inject } from '@adonisjs/core'
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
-import { requestTokenValidator } from '#validators/request_token_validator'
+import { requestTokenValidator } from '#validators/auth/request_token_validator'
 
 @inject()
 export default class RequestTokenController {

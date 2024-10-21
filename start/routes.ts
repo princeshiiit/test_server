@@ -66,31 +66,31 @@ router.post('/register', async (ctx) => {
 router.group(() => {
   router.post('/create-todo', async (ctx) => {
     const { default: TodosController } = await import(
-      '#controllers/http/crud/todos_controller'
+      '#controllers/http/todo/todos_controller'
     )
     return new TodosController().create(ctx)
   })
   router.get('/read-todo/:id', async (ctx) => {
     const { default: TodosController } = await import(
-      '#controllers/http/crud/todos_controller'
+      '#controllers/http/todo/todos_controller'
     )
     return new TodosController().readById(ctx)
   })
   router.get('/browse-todo', async (ctx) => {
     const { default: TodosController } = await import(
-      '#controllers/http/crud/todos_controller'
+      '#controllers/http/todo/todos_controller'
     )
     return new TodosController().readAll(ctx)
   })
   router.put('/update-todo/:id', async (ctx) => {
     const { default: TodosController } = await import(
-      '#controllers/http/crud/todos_controller'
+      '#controllers/http/todo/todos_controller'
     )
     return new TodosController().update(ctx)
   })
   router.delete('/delete-todo/:id', async (ctx) => {
     const { default: TodosController } = await import(
-      '#controllers/http/crud/todos_controller'
+      '#controllers/http/todo/todos_controller'
     )
     return new TodosController().delete(ctx)
   })
