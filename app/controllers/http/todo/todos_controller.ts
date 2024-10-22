@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http';
 import Todo from '#models/todo';
 import RedisService from '#services/redis_service';
 import { createTodoValidator, updateTodoValidator } from '#validators/todo/todo_validator';
+import TodoHandlerException from '#exceptions/todo_handler_exception';
 
 const redisService = new RedisService();
 
@@ -49,7 +50,7 @@ export default class TodosController {
 
     todo = await Todo.find(params.id);
     if (!todo) {
-      return response.status(404).json({ message: 'Todo not found' });
+      throw new TodoHandlerException('Todo not found', { status: 404 });
     }
 
     await redisService.set(cacheKey, JSON.stringify(todo));
@@ -87,7 +88,7 @@ export default class TodosController {
   public async update({ params, request, response }: HttpContext): Promise<void> {
     const todo = await Todo.find(params.id);
     if (!todo) {
-      return response.status(404).json({ message: 'Todo not found' });
+      throw new TodoHandlerException('Todo not found', { status: 404 });
     }
 
     // Validate input
@@ -111,7 +112,7 @@ export default class TodosController {
   public async delete({ params, response }: HttpContext): Promise<void> {
     const todo = await Todo.find(params.id);
     if (!todo) {
-      return response.status(404).json({ message: 'Todo not found' });
+      throw new TodoHandlerException('Todo not found', { status: 404 });
     }
     await todo.delete();
     await redisService.del(`todo:${todo.id}`);
