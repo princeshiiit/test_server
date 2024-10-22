@@ -21,12 +21,14 @@ export default class TodosController {
 
     // Validate input
     await createTodoValidator.validate({ title, description });
-
     const todo = new Todo();
     todo.title = title;
     todo.description = description;
     await todo.save();
     await redisService.set(`todo:${todo.id}`, JSON.stringify(todo));
+    // update redis for readAll
+    const todos = await Todo.all();
+    await redisService.set('todos', JSON.stringify(todos));
     return response.status(201).json(todo);
   }
 
