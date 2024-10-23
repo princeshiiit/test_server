@@ -43,12 +43,16 @@ export default class TodosController {
   public async readById({ params, response }: HttpContext): Promise<void> {
     const cacheKey = `todo:${params.id}`;
     
-    let todo = await redisService.get(cacheKey);
-    if (todo) {
-      return response.status(200).json(JSON.parse(todo));
+    let todos = await redisService.get('todos');
+    if (todos) {
+      todos = JSON.parse(todos);
+      const todo = todos.find((todo: any) => todo.id === params.id);
+      if (todo) {
+        return response.status(200).json(todo);
+      }
     }
 
-    todo = await Todo.find(params.id);
+    const todo = await Todo.find(params.id);
     if (!todo) {
       throw new TodoHandlerException('Todo not found', { status: 404 });
     }
@@ -98,7 +102,16 @@ export default class TodosController {
     if (title) todo.title = title;
     if (description) todo.description = description;
     await todo.save();
-    await redisService.set(`todo:${todo.id}`, JSON.stringify(todo));
+    // update redis for readAll
+    let todos = await redisService.get('todos');
+    if (todos) {
+      todos = JSON.parse(todos);
+      const todoIndex = todos.findIndex((todo: any) => todo.id === todo.id);
+      if (todoIndex !== -1) {
+        todos[todoIndex] = todo;
+        await redisService.set('todos', JSON.stringify(todos));
+      }
+    }
     return response.status(200).json(todo);
   }
 
@@ -115,7 +128,18 @@ export default class TodosController {
       throw new TodoHandlerException('Todo not found', { status: 404 });
     }
     await todo.delete();
-    await redisService.del(`todo:${todo.id}`);
+    const todosCacheKey = 'todos';
+    let todos = await redisService.get(todosCacheKey);
+    if (todos) {
+      todos = JSON.parse(todos);
+      const todoIndex = todos.findIndex((todo: any) => todo.id === params.id);
+      if (todoIndex !== -1) {
+        todos.splice(todoIndex, 1);
+        await redisService.set(todosCacheKey, JSON.stringify(todos));
+      } else {
+        await redisService.del(todosCacheKey);
+      }
+    }
     return response.status(200).json({ message: 'Todo deleted successfully' });
   }
 }
